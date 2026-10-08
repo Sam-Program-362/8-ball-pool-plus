@@ -370,7 +370,7 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
       } else {
         sfx.pocket();
         const dropping = matchRef.current?.world.balls.find((b) => b.drop > 0);
-        renderer.pocketFx(x, y, BALL_COLORS[dropping?.id ?? 0] ?? "#f4d68a");
+        renderer.pocketFx(x, y, BALL_COLORS[dropping?.id ?? 0] ?? "#86fbff");
         renderer.shake = Math.max(renderer.shake, 0.34);
         haptic(26, store.get().settings.haptics);
       }
@@ -622,14 +622,18 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
         <div className="absolute left-1/2 top-3 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-1.5 w-full px-3">
           {toasts.map((t) => (
             <div key={t.id}
-              className={cn("anim-toast px-4 py-1.5 rounded-lg border backdrop-blur-[2px] text-center max-w-[92vw]",
-                t.kind === "foul" && "bg-[#5c1a14]/90 border-[#ff9c8f]/40",
-                t.kind === "good" && "bg-[#123c2a]/90 border-[#7fd69a]/40",
-                t.kind === "big" && "bg-[#3a2c0c]/92 border-brass/60",
-                t.kind === "warn" && "bg-[#4a3410]/90 border-brass/40",
-                t.kind === "info" && "bg-black/70 border-white/15")}>
-              <div className={cn("display uppercase leading-none tracking-wide",
-                t.kind === "big" ? "text-[30px] text-brass2" : t.kind === "foul" ? "text-[24px] text-[#ffd9d3]" : "text-[21px] text-cream")}>
+              className={cn("anim-toast px-4 py-1.5 clip-tag border backdrop-blur-md text-center max-w-[92vw]",
+                t.kind === "foul" && "bg-crimson/22 border-crimson/55 shadow-[0_0_28px_rgba(255,59,92,.3)]",
+                t.kind === "good" && "bg-lime/16 border-lime/50 shadow-[0_0_28px_rgba(163,255,18,.26)]",
+                t.kind === "big" && "bg-accent/20 border-accent/60 shadow-[0_0_34px_rgba(34,211,238,.36)]",
+                t.kind === "warn" && "bg-amber/18 border-amber/50 shadow-[0_0_28px_rgba(255,176,32,.26)]",
+                t.kind === "info" && "bg-ink/80 border-white/18")}>
+              <div className={cn("display uppercase leading-none tracking-[0.06em]",
+                t.kind === "big" ? "text-[30px] text-accent2 neon-text"
+                  : t.kind === "foul" ? "text-[24px] text-[#ffd7de]"
+                  : t.kind === "good" ? "text-[21px] text-lime"
+                  : t.kind === "warn" ? "text-[21px] text-amber"
+                  : "text-[21px] text-cream")}>
                 {t.text}
               </div>
               {t.sub && <div className="text-[11px] text-cream/70 mt-0.5">{t.sub}</div>}
@@ -640,29 +644,29 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
         {/* ball in hand banner */}
         {hud?.phase === "place" && !isAiTurn && (
           <div className="absolute left-1/2 bottom-3 -translate-x-1/2 z-20 anim-pop pointer-events-none">
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/75 border border-brass/45 backdrop-blur-[2px]">
-              <Ico.hand className="w-4 h-4 text-brass2" />
+            <div className="flex items-center gap-2 px-3.5 py-2 clip-tag bg-accent/14 border border-accent/55 backdrop-blur-md shadow-[0_0_28px_rgba(34,211,238,.3)]">
+              <Ico.hand className="w-4 h-4 text-accent2" />
               <span className="display text-[17px] uppercase text-cream tracking-wide">Ball in hand — drag to place</span>
             </div>
           </div>
         )}
 
         {aiThinking && hud?.phase === "aim" && (
-          <div className="absolute right-3 top-3 z-20 pointer-events-none flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-black/70 border border-white/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#ff9c8f] animate-pulse" />
+          <div className="absolute right-3 top-3 z-20 pointer-events-none flex items-center gap-2 px-2.5 py-1.5 clip-tag bg-ink/80 border border-magenta/45 backdrop-blur-md">
+            <span className="w-1.5 h-1.5 rounded-full bg-magenta animate-pulse" style={{ boxShadow: "0 0 10px #ff2e88" }} />
             <span className="text-[11px] uppercase tracking-[0.18em] text-muted">CPU thinking</span>
           </div>
         )}
 
         {portrait && (
-          <div className="absolute left-2 top-2 z-20 pointer-events-none px-2 py-1 rounded-md bg-black/60 border border-white/10 text-[10px] uppercase tracking-[0.14em] text-muted">
+          <div className="absolute left-2 top-2 z-20 pointer-events-none px-2 py-1 clip-tag bg-ink/75 border border-white/10 backdrop-blur-md text-[10px] uppercase tracking-[0.14em] text-muted">
             Rotate for a bigger table
           </div>
         )}
 
         {/* physics badge */}
-        <div className="absolute left-2 bottom-2 z-20 pointer-events-none flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/55 border border-white/10">
-          <Ico.atom className={cn("w-3.5 h-3.5", high ? "text-brass2" : "text-muted")} />
+        <div className="absolute left-2 bottom-2 z-20 pointer-events-none flex items-center gap-1.5 px-2 py-1 clip-tag bg-ink/75 border border-white/10 backdrop-blur-md">
+          <Ico.atom className={cn("w-3.5 h-3.5", high ? "text-accent2" : "text-muted")} />
           <span className="text-[9.5px] uppercase tracking-[0.16em] text-muted">{high ? "High physics" : "Arcade"}</span>
         </div>
       </div>
@@ -685,8 +689,8 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
                 onPointerUp={stopNudge} onPointerLeave={stopNudge} onPointerCancel={stopNudge}>
                 <Ico.back className="w-3.5 h-3.5" />
               </IconBtn>
-              <div className="flex-1 h-7 rounded-md bg-black/45 border border-white/[0.07] grid place-items-center overflow-hidden">
-                <span className="display text-[15px] text-muted tnum">
+              <div className="flex-1 h-7 clip-tag bg-black/50 border border-white/[0.08] grid place-items-center overflow-hidden">
+                <span className="display text-[15px] text-accent2/90 tnum">
                   {(((((aimRef.current * 180) / Math.PI) % 360) + 360) % 360).toFixed(1)}°
                 </span>
               </div>
@@ -717,13 +721,16 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
               } else playerShoot();
             }}
             disabled={isAiTurn || overRef.current || (hud?.phase !== "aim" && hud?.phase !== "place")}
-            className={cn("press relative rounded-full grid place-items-center shrink-0 border-2",
+            className={cn("press relative rounded-full grid place-items-center shrink-0 overflow-hidden",
               compact ? "w-[56px] h-[56px]" : "w-[74px] h-[74px] sm:w-[84px] sm:h-[84px]",
               hud?.phase === "place" && !isAiTurn
-                ? "border-[#7fd69a]/70 bg-[radial-gradient(circle_at_35%_28%,#3fa86a,#12422a)] text-[#eafff1] shadow-[0_6px_0_#0b2b1a,0_12px_26px_rgba(0,0,0,.6)]"
-                : "border-brass2/70 brassplate text-[#221703] shadow-[0_6px_0_#6d4c12,0_12px_26px_rgba(0,0,0,.6)]",
-              (isAiTurn || overRef.current) && "opacity-45 pointer-events-none")}>
-            <span className="absolute inset-1.5 rounded-full border border-black/20" />
+                ? "text-[#04140c] shadow-[0_0_0_2px_rgba(163,255,18,.7),0_0_34px_rgba(163,255,18,.4),0_5px_0_rgba(6,30,16,.8)]"
+                : "neon-cta text-[#04222b] shadow-[0_0_34px_rgba(34,211,238,.45),0_5px_0_rgba(3,20,30,.8)]",
+              (isAiTurn || overRef.current) && "opacity-40 pointer-events-none saturate-0")}
+            style={hud?.phase === "place" && !isAiTurn
+              ? { background: "linear-gradient(140deg, #d4ff7a, #a3ff12 45%, #4d9e00)" }
+              : undefined}>
+            <span className="absolute inset-[3px] rounded-full border border-white/25 pointer-events-none" />
             <span className="relative flex flex-col items-center">
               {hud?.phase === "place" && !isAiTurn
                 ? <Ico.hand className={compact ? "w-5 h-5" : "w-6 h-6"} />
@@ -739,14 +746,14 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
       {/* ============ MODALS ============ */}
       {paused && !over && (
         <div className="fixed inset-0 z-40 grid place-items-center p-3 bg-black/75 backdrop-blur-[3px]">
-          <div className="anim-pop w-full max-w-sm rounded-2xl border border-white/10 bg-[linear-gradient(165deg,#1b211c,#0d1210_70%)] p-5 shadow-[0_30px_80px_rgba(0,0,0,.8)]">
-            <div className="display text-[30px] leading-none uppercase text-cream">Paused</div>
+          <div className="anim-pop w-full max-w-sm clip-panel glass edge-glow p-5 shadow-[0_34px_90px_rgba(0,0,0,.85),0_0_50px_rgba(34,211,238,.12)]">
+            <div className="display text-[30px] leading-none uppercase text-cream tracking-[0.02em]">Paused</div>
             <p className="text-[12px] text-muted mt-1">Rack {hud?.shotNo ?? 0} · {diff.name} · {skin.name}</p>
             <div className="mt-4 grid gap-2">
-              <Btn variant="gold" size="lg" onClick={() => { sfx.ui(); setPaused(false); }} icon={<Ico.play className="w-5 h-5" />}>Resume</Btn>
+              <Btn variant="primary" size="lg" onClick={() => { sfx.ui(); setPaused(false); }} icon={<Ico.play className="w-5 h-5" />}>Resume</Btn>
               <div className="grid grid-cols-2 gap-2">
-                <Btn variant="wood" onClick={() => { sfx.ui(); setInSettings(true); setPaused(false); }} icon={<Ico.gear className="w-4 h-4" />}>Settings</Btn>
-                <Btn variant="wood" onClick={() => restart()} icon={<Ico.restart className="w-4 h-4" />}>Restart</Btn>
+                <Btn variant="secondary" onClick={() => { sfx.ui(); setInSettings(true); setPaused(false); }} icon={<Ico.gear className="w-4 h-4" />}>Settings</Btn>
+                <Btn variant="secondary" onClick={() => restart()} icon={<Ico.restart className="w-4 h-4" />}>Restart</Btn>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <Btn variant="ghost" onClick={() => { sfx.foul(); match.resign(1); finishGame(1, "You resigned"); }} icon={<Ico.flag className="w-4 h-4" />}>Resign</Btn>
@@ -772,13 +779,13 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
 
       {over && (
         <div className="fixed inset-0 z-50 grid place-items-center p-3 bg-black/80 backdrop-blur-[4px]">
-          <div className="anim-pop w-full max-w-sm rounded-2xl overflow-hidden border border-white/10 bg-[linear-gradient(165deg,#1e241e,#0b0f0d_75%)] shadow-[0_30px_90px_rgba(0,0,0,.85)]">
+          <div className="anim-pop w-full max-w-sm clip-panel glass overflow-hidden shadow-[0_34px_90px_rgba(0,0,0,.88),0_0_60px_rgba(34,211,238,.14)]">
             <div className={cn("relative px-6 pt-7 pb-5 text-center",
-              over.winner === 0 ? "bg-[radial-gradient(80%_120%_at_50%_0%,rgba(217,164,65,.35),transparent)]" : "bg-[radial-gradient(80%_120%_at_50%_0%,rgba(192,57,43,.3),transparent)]")}>
+              over.winner === 0 ? "bg-[radial-gradient(80%_120%_at_50%_0%,rgba(34,211,238,.34),transparent)]" : "bg-[radial-gradient(80%_120%_at_50%_0%,rgba(255,59,92,.3),transparent)]")}>
               <div className="mx-auto mb-2 w-fit anim-float">
                 <BallDot id={8} size={54} glow />
               </div>
-              <div className={cn("display uppercase leading-none", over.winner === 0 ? "text-brass2" : "text-[#ff9c8f]")}
+              <div className={cn("display uppercase leading-none", over.winner === 0 ? "text-accent2 neon-text" : "text-[#ffd7de] neon-text-magenta")}
                 style={{ fontSize: 46, textShadow: "0 5px 0 rgba(0,0,0,.5)" }}>
                 {over.winner === 0 ? "Rack Won" : "Rack Lost"}
               </div>
@@ -786,21 +793,21 @@ export default function Game({ setup, onExit }: { setup: MatchSetup; onExit: () 
             </div>
             <div className="px-5 pb-5 pt-4">
               <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 border border-brass/25 flex-1">
-                  <Ico.coin className="w-4 h-4 text-brass2" />
-                  <span className="display text-[22px] leading-none text-brass2 tnum">+{over.coins}</span>
+                <div className="flex items-center gap-2 px-3 py-2 clip-tag bg-amber/10 border border-amber/35 flex-1">
+                  <Ico.coin className="w-4 h-4 text-amber" />
+                  <span className="display text-[22px] leading-none text-amber tnum">+{over.coins}</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-black/40 border border-sky/25 flex-1">
-                  <Ico.star className="w-4 h-4 text-sky" />
-                  <span className="display text-[22px] leading-none text-sky tnum">+{over.xp} xp</span>
+                <div className="flex items-center gap-2 px-3 py-2 clip-tag bg-violet/12 border border-violet/40 flex-1">
+                  <Ico.star className="w-4 h-4 text-violet" />
+                  <span className="display text-[22px] leading-none text-violet tnum">+{over.xp} xp</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-black/35 border border-white/[0.07] mb-4">
+              <div className="flex items-center gap-2.5 px-3 py-2 clip-tag bg-black/40 border border-white/[0.08] mb-4">
                 <LevelRing level={lp.level} pct={lp.pct} size={40} />
                 <div className="flex-1">
                   <div className="text-[10px] uppercase tracking-[0.18em] text-muted">Level {lp.level}</div>
-                  <div className="h-1.5 mt-1 rounded-full bg-black/60 overflow-hidden">
-                    <div className="h-full rounded-full bg-[linear-gradient(90deg,#f4d68a,#c07f1d)]"
+                  <div className="h-1.5 mt-1 bg-black/65 overflow-hidden">
+                    <div className="h-full bg-[linear-gradient(90deg,#86fbff,#8b5cf6)]"
                       style={{ width: `${lp.pct * 100}%`, transition: "width 1s ease" }} />
                   </div>
                 </div>
@@ -870,17 +877,17 @@ function PlayerCard({ p, side, openTable, isBreak, onEight, compact }: {
   p: HudPlayer; side: "l" | "r"; openTable: boolean; isBreak: boolean; onEight: boolean; compact?: boolean;
 }) {
   return (
-    <div className={cn("flex-1 min-w-0 rounded-xl px-2.5 py-1.5 border transition-all duration-300",
+    <div className={cn("flex-1 min-w-0 clip-tag px-2.5 py-1.5 border backdrop-blur-md transition-all duration-300",
       p.turn
-        ? "border-brass/60 bg-[linear-gradient(180deg,rgba(217,164,65,.18),rgba(0,0,0,.45))] shadow-[0_0_22px_rgba(217,164,65,.16)]"
-        : "border-white/[0.07] bg-black/40",
+        ? "border-accent/60 bg-[linear-gradient(180deg,rgba(34,211,238,.2),rgba(4,6,13,.6))] shadow-[0_0_26px_rgba(34,211,238,.24)]"
+        : "border-white/[0.08] bg-ink/55",
       side === "r" && "flex-row-reverse text-right")}>
       <div className={cn("flex items-center gap-2 min-w-0", side === "r" && "flex-row-reverse")}>
-        <div className={cn("relative grid place-items-center rounded-lg shrink-0 border",
+        <div className={cn("relative grid place-items-center clip-tag shrink-0 border",
           compact ? "w-7 h-7" : "w-9 h-9",
-          p.turn ? "border-brass/60 bg-brass/15" : "border-white/10 bg-black/50")}>
-          {p.isAI ? <Ico.cpu className={cn(compact ? "w-4 h-4" : "w-5 h-5", p.turn ? "text-brass2" : "text-muted")} />
-            : <span className={cn("display leading-none", compact ? "text-[15px]" : "text-[19px]", p.turn ? "text-brass2" : "text-muted")}>{p.name.slice(0, 1)}</span>}
+          p.turn ? "border-accent/60 bg-accent/15" : "border-white/10 bg-black/55")}>
+          {p.isAI ? <Ico.cpu className={cn(compact ? "w-4 h-4" : "w-5 h-5", p.turn ? "text-accent2" : "text-muted")} />
+            : <span className={cn("display leading-none", compact ? "text-[15px]" : "text-[19px]", p.turn ? "text-accent2" : "text-muted")}>{p.name.slice(0, 1)}</span>}
           {p.fouls > 0 && (
             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-crimson text-[10px] grid place-items-center text-white font-bold border border-black/40">
               {p.fouls}
@@ -890,7 +897,7 @@ function PlayerCard({ p, side, openTable, isBreak, onEight, compact }: {
         <div className={cn("min-w-0 flex-1", side === "r" && "flex flex-col items-end")}>
           <div className="display text-[18px] leading-none uppercase text-cream truncate max-w-[92px] sm:max-w-none">{p.name}</div>
           <div className="text-[9.5px] uppercase tracking-[0.14em] mt-0.5"
-            style={{ color: openTable ? "#9aa79b" : p.group === "solids" ? "#e8c46a" : "#7fb6e8" }}>
+            style={{ color: openTable ? "#7686ad" : p.group === "solids" ? "#86fbff" : "#c4b5fd" }}>
             {isBreak ? "Break" : openTable ? "Open table" : onEight ? "On the 8-ball" : p.group}
           </div>
         </div>
@@ -924,7 +931,7 @@ function PowerBar({ value, onChange, disabled, compact }: {
       <div className={cn("flex items-center justify-between px-0.5", compact ? "mb-0.5" : "mb-1")}>
         <span className="text-[9.5px] uppercase tracking-[0.2em] text-muted">Power</span>
         <span className={cn("display leading-none tnum", compact ? "text-[14px]" : "text-[16px]",
-          pct > 80 ? "text-[#ff9c8f]" : pct > 50 ? "text-brass2" : "text-cream")}>
+          pct > 80 ? "text-magenta" : pct > 50 ? "text-accent2" : "text-cream")}>
           {pct}%
         </span>
       </div>
@@ -933,15 +940,15 @@ function PowerBar({ value, onChange, disabled, compact }: {
         onPointerMove={(e) => { if (drag && !disabled) set(e.clientX); }}
         onPointerUp={() => setDrag(false)}
         onPointerCancel={() => setDrag(false)}
-        className={cn("relative rounded-lg bg-black/55 border border-white/[0.08] overflow-hidden cursor-pointer touch-none",
+        className={cn("relative clip-tag bg-black/60 border border-white/[0.09] overflow-hidden cursor-pointer touch-none",
           compact ? "h-[18px]" : "h-[26px]")}>
         <div className="absolute inset-0 opacity-25"
           style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 1px, transparent 1px 10%)" }} />
-        <div className="absolute inset-y-0 left-0 rounded-r-md"
+        <div className="absolute inset-y-0 left-0"
           style={{
             width: `${value * 100}%`,
-            background: "linear-gradient(90deg,#2fa06a 0%,#7fd69a 26%,#e0c14a 58%,#e07a3c 78%,#d8433a 100%)",
-            boxShadow: "0 0 16px rgba(224,160,60,.45)",
+            background: "linear-gradient(90deg,#22d3ee 0%,#38bdf8 30%,#8b5cf6 62%,#ff2e88 88%,#ff3b5c 100%)",
+            boxShadow: "0 0 18px rgba(34,211,238,.55)",
             transition: drag ? "none" : "width .12s ease-out",
           }}>
           <div className="absolute inset-0 shimmer opacity-40" />
@@ -983,11 +990,13 @@ function SpinPad({ value, onChange, disabled, size = 74, compact }: {
         onPointerCancel={() => setDrag(false)}
         onDoubleClick={() => onChange({ x: 0, y: 0 })}
         className={cn("relative rounded-full border touch-none",
-          disabled ? "border-white/[0.07] opacity-45" : "border-white/15 cursor-pointer")}
+          disabled ? "border-white/[0.07] opacity-45" : "border-accent/35 cursor-pointer")}
         style={{
           width: size, height: size,
-          background: "radial-gradient(circle at 34% 28%, #ffffff, #ded8c8 58%, #9d968a 100%)",
-          boxShadow: "inset 0 -3px 8px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.5)",
+          background: "radial-gradient(circle at 34% 28%, #ffffff, #e6ecf5 56%, #9aa8b8 100%)",
+          boxShadow: disabled
+            ? "inset 0 -3px 8px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.5)"
+            : "inset 0 -3px 8px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.5), 0 0 20px rgba(34,211,238,.3)",
         }}>
         {/* cross hairs */}
         <span className="absolute left-1/2 top-[12%] bottom-[12%] w-px bg-black/15 -translate-x-1/2" />
@@ -1015,7 +1024,7 @@ function SpinPad({ value, onChange, disabled, size = 74, compact }: {
           {disabled ? "spin locked" : compact ? "spin" : "english"}
         </div>
         {!disabled && !compact && (
-          <div className="display text-[13px] text-brass2/90 tnum mt-0.5">
+          <div className="display text-[13px] text-accent2/90 tnum mt-0.5">
             {Math.abs(value.x) < 0.06 && Math.abs(value.y) < 0.06 ? "center" :
               `${value.y > 0.06 ? "top" : value.y < -0.06 ? "bottom" : ""}${value.x > 0.06 ? " right" : value.x < -0.06 ? " left" : ""}`.trim()}
           </div>

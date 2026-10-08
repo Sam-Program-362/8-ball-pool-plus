@@ -46,38 +46,49 @@ export function BallDot({ id, size = 22, dim = false, glow = false, className }:
 }) {
   const c = BALL_COLORS[id];
   const stripe = isStripe(id);
-  const bg = stripe
-    ? `radial-gradient(circle at 32% 28%, #ffffff, #ded8c8 62%, #a9a294), linear-gradient(${c},${c})`
-    : `radial-gradient(circle at 32% 28%, rgba(255,255,255,.85), rgba(255,255,255,0) 46%), radial-gradient(circle at 68% 78%, rgba(0,0,0,.45), rgba(0,0,0,0) 55%), ${c}`;
+  const shell = stripe
+    ? "radial-gradient(circle at 34% 28%, #ffffff, #e4eef6 58%, #9aa8b6)"
+    : `radial-gradient(circle at 32% 26%, rgba(255,255,255,.92), rgba(255,255,255,0) 44%),
+       radial-gradient(circle at 70% 80%, rgba(0,0,0,.5), rgba(0,0,0,0) 56%), ${c}`;
   return (
     <span
       className={cn("relative inline-grid place-items-center rounded-full shrink-0", className)}
       style={{
         width: size, height: size, overflow: "hidden",
-        background: stripe ? `radial-gradient(circle at 34% 30%, #fff, #d9d3c4 70%, #a49d8e)` : bg,
+        background: shell,
         boxShadow: glow
-          ? `0 0 0 1.5px rgba(255,225,150,.9), 0 0 12px 2px ${c}88`
-          : "inset 0 -1px 2px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.5)",
-        opacity: dim ? 0.28 : 1,
-        filter: dim ? "grayscale(.6)" : undefined,
+          ? `0 0 0 1.5px rgba(134,251,255,.95), 0 0 14px 3px ${c}aa, 0 0 26px 6px rgba(34,211,238,.35)`
+          : "inset 0 -1.5px 3px rgba(0,0,0,.55), inset 0 1px 1px rgba(255,255,255,.28), 0 2px 4px rgba(0,0,0,.6)",
+        opacity: dim ? 0.26 : 1,
+        filter: dim ? "grayscale(.7)" : undefined,
+        transition: "box-shadow .25s ease, opacity .25s ease",
       }}
     >
       {stripe && (
         <span className="absolute"
-          style={{ left: 0, right: 0, top: size * 0.27, height: size * 0.46, background: c }} />
-      )}
-      {id > 0 && size >= 15 && (
-        <span className={cn("relative rounded-full grid place-items-center font-bold", stripe ? "" : "")}
           style={{
-            width: size * 0.52, height: size * 0.52, background: "#f8f5ec",
-            color: "#1b1b1b", fontSize: size * 0.32, lineHeight: 1,
-            boxShadow: "inset 0 -1px 1px rgba(0,0,0,.25)",
+            left: 0, right: 0, top: size * 0.27, height: size * 0.46, background: c,
+            boxShadow: `inset 0 1px 2px rgba(255,255,255,.25), inset 0 -1px 2px rgba(0,0,0,.3)`,
+          }} />
+      )}
+      {/* specular highlight sits above the stripe so the sphere reads as glossy */}
+      <span className="absolute rounded-full pointer-events-none"
+        style={{
+          width: size * 0.34, height: size * 0.24, left: size * 0.2, top: size * 0.14,
+          background: "radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.9), rgba(255,255,255,0) 70%)",
+        }} />
+      {id > 0 && size >= 15 && (
+        <span className="relative rounded-full grid place-items-center font-bold"
+          style={{
+            width: size * 0.52, height: size * 0.52, background: "#f4f7fb",
+            color: "#0d1524", fontSize: size * 0.32, lineHeight: 1,
+            boxShadow: "inset 0 -1px 2px rgba(0,0,0,.3), 0 0 0 0.5px rgba(0,0,0,.15)",
           }}>
           {id}
         </span>
       )}
       {id === 0 && (
-        <span className="relative rounded-full" style={{ width: size * 0.22, height: size * 0.22, background: "#b8243a", opacity: .5 }} />
+        <span className="relative rounded-full" style={{ width: size * 0.22, height: size * 0.22, background: "#ff2e88", opacity: .55 }} />
       )}
     </span>
   );
@@ -85,30 +96,37 @@ export function BallDot({ id, size = 22, dim = false, glow = false, className }:
 
 /* ---------------------------------------------------------------- buttons */
 type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "gold" | "wood" | "ghost" | "danger" | "felt";
+  /** `primary`/`gold` = neon CTA, `secondary`/`wood` = outlined neon,
+   *  `success`/`felt` = lime, `ghost` = glass, `danger` = crimson. */
+  variant?: "gold" | "wood" | "ghost" | "danger" | "felt" | "primary" | "secondary" | "success";
   size?: "sm" | "md" | "lg";
   icon?: React.ReactNode;
 };
 
-export function Btn({ variant = "wood", size = "md", icon, className, children, ...rest }: BtnProps) {
+export function Btn({ variant = "secondary", size = "md", icon, className, children, ...rest }: BtnProps) {
   const sizes = {
-    sm: "px-3 py-1.5 text-[12px] tracking-wide",
-    md: "px-4 py-2.5 text-[14px] tracking-wide",
-    lg: "px-6 py-3.5 text-[17px] tracking-wider",
+    sm: "px-3 py-1.5 text-[12px] tracking-[0.08em]",
+    md: "px-4 py-2.5 text-[14px] tracking-[0.08em]",
+    lg: "px-6 py-3.5 text-[17px] tracking-[0.12em]",
   }[size];
-  const variants = {
-    gold: "text-[#221703] brassplate shadow-[0_6px_0_#6d4c12,0_10px_24px_rgba(0,0,0,.55)] hover:brightness-110 border border-[#ffe9b0]/50",
-    wood: "text-cream wood shadow-[0_5px_0_#1a0f07,0_10px_22px_rgba(0,0,0,.5)] hover:brightness-115 border border-[#a9763c]/40",
-    felt: "text-cream feltbg shadow-[0_5px_0_#06281a,0_10px_22px_rgba(0,0,0,.45)] hover:brightness-115 border border-[#4bd39a]/25",
-    ghost: "text-muted bg-white/[0.04] border border-white/10 hover:text-cream hover:bg-white/[0.08]",
-    danger: "text-[#ffd9d3] bg-gradient-to-b from-[#a5332a] to-[#6b1c17] border border-[#ff9c8f]/30 shadow-[0_5px_0_#3d0f0b] hover:brightness-110",
-  }[variant];
+  const variants: Record<string, string> = {
+    // neon CTA — the single loudest element on any screen
+    gold: "neon-cta sweep",
+    primary: "neon-cta sweep",
+    // outlined neon — the default workhorse
+    wood: "neon-line",
+    secondary: "neon-line",
+    success: "text-lime bg-lime/10 shadow-[0_0_0_1px_rgba(163,255,18,.42)_inset,0_0_20px_rgba(163,255,18,.14)] hover:bg-lime/16",
+    felt: "text-lime bg-lime/10 shadow-[0_0_0_1px_rgba(163,255,18,.42)_inset,0_0_20px_rgba(163,255,18,.14)] hover:bg-lime/16",
+    ghost: "text-muted bg-white/[0.04] border border-white/10 hover:text-cream hover:bg-white/[0.08] hover:border-white/20",
+    danger: "text-[#ffd7de] bg-crimson/14 shadow-[0_0_0_1px_rgba(255,59,92,.5)_inset,0_0_20px_rgba(255,59,92,.16)] hover:bg-crimson/22",
+  };
   return (
     <button
       {...rest}
       className={cn(
-        "display uppercase font-semibold rounded-[10px] press inline-flex items-center justify-center gap-2 select-none",
-        "disabled:opacity-40 disabled:pointer-events-none", sizes, variants, className,
+        "display uppercase font-semibold clip-tag press inline-flex items-center justify-center gap-2 select-none",
+        "disabled:opacity-35 disabled:pointer-events-none disabled:saturate-0", sizes, variants[variant], className,
       )}
     >
       {icon}
@@ -123,8 +141,10 @@ export function IconBtn({ label, active, className, children, ...rest }: React.B
   return (
     <button {...rest} title={label} aria-label={label}
       className={cn(
-        "press grid place-items-center rounded-lg border transition-colors",
-        active ? "border-brass/60 bg-brass/15 text-brass2" : "border-white/10 bg-white/[0.04] text-muted hover:text-cream",
+        "press grid place-items-center clip-tag border transition-all duration-200",
+        active
+          ? "border-accent/70 bg-accent/15 text-accent2 shadow-[0_0_18px_rgba(34,211,238,.28)]"
+          : "border-white/10 bg-white/[0.04] text-muted hover:text-cream hover:border-white/25 hover:bg-white/[0.08]",
         className,
       )}>
       {children}
@@ -133,37 +153,47 @@ export function IconBtn({ label, active, className, children, ...rest }: React.B
 }
 
 /* ---------------------------------------------------------------- bits */
-export function StatBar({ label, value, color = "#d9a441", icon }: { label: string; value: number; color?: string; icon?: React.ReactNode }) {
+export function StatBar({ label, value, color = "#22d3ee", icon }: { label: string; value: number; color?: string; icon?: React.ReactNode }) {
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] text-muted mb-1">
+      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-muted mb-1.5">
         <span className="flex items-center gap-1">{icon}{label}</span>
-        <span className="tnum text-cream/80">{value}</span>
+        <span className="tnum text-cream/85">{value}</span>
       </div>
-      <div className="h-[6px] rounded-full bg-black/50 overflow-hidden border border-white/5">
-        <div className="h-full rounded-full transition-[width] duration-700 ease-out"
-          style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}66, ${color})`, boxShadow: `0 0 10px ${color}77` }} />
+      <div className="relative h-[7px] bg-black/60 overflow-hidden border border-white/[0.07]"
+        style={{ clipPath: "polygon(3px 0,100% 0,calc(100% - 3px) 100%,0 100%)" }}>
+        <div className="h-full transition-[width] duration-700 ease-out"
+          style={{
+            width: `${value}%`,
+            background: `linear-gradient(90deg, ${color}55, ${color})`,
+            boxShadow: `0 0 12px ${color}aa`,
+          }} />
       </div>
     </div>
   );
 }
 
-export function Toggle({ on, onChange, label, desc, icon, accent = "#d9a441" }: {
+export function Toggle({ on, onChange, label, desc, icon, accent = "#22d3ee" }: {
   on: boolean; onChange: (v: boolean) => void; label: string; desc?: string; icon?: React.ReactNode; accent?: string;
 }) {
   return (
     <button onClick={() => onChange(!on)}
-      className="press w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-white/[0.035] border border-white/[0.07] hover:bg-white/[0.06] text-left">
-      {icon && <span className={cn("shrink-0 transition-colors", on ? "text-brass2" : "text-muted")}>{icon}</span>}
+      className="press w-full flex items-center gap-3 px-3.5 py-3 clip-tag bg-white/[0.035] border border-white/[0.07] hover:bg-white/[0.06] hover:border-white/[0.14] text-left transition-colors">
+      {icon && <span className={cn("shrink-0 transition-colors", on ? "text-accent2" : "text-muted")}>{icon}</span>}
       <span className="flex-1 min-w-0">
         <span className="block display text-[17px] leading-tight text-cream uppercase">{label}</span>
         {desc && <span className="block text-[11.5px] text-muted leading-snug mt-0.5">{desc}</span>}
       </span>
-      <span className={cn("relative w-11 h-6 rounded-full shrink-0 border transition-colors",
-        on ? "border-transparent" : "border-white/15 bg-black/45")}
-        style={on ? { background: `linear-gradient(90deg, ${accent}88, ${accent})` } : undefined}>
-        <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-cream shadow transition-all",
-          on ? "left-[22px]" : "left-0.5 bg-muted/70")} />
+      <span className={cn("relative w-11 h-6 shrink-0 border transition-all duration-200",
+        on ? "border-transparent" : "border-white/15 bg-black/50")}
+        style={{
+          clipPath: "polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)",
+          background: on ? `linear-gradient(90deg, ${accent}66, ${accent})` : undefined,
+          boxShadow: on ? `0 0 16px ${accent}66` : undefined,
+        }}>
+        <span className={cn("absolute top-0.5 w-5 h-5 bg-cream transition-all duration-200",
+          on ? "left-[22px]" : "left-0.5 bg-muted/70")}
+          style={{ clipPath: "polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)" }} />
       </span>
     </button>
   );
@@ -171,10 +201,11 @@ export function Toggle({ on, onChange, label, desc, icon, accent = "#d9a441" }: 
 
 export function CoinPill({ amount, className, animate }: { amount: number; className?: string; animate?: boolean }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/45 border border-brass/25",
+    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 clip-tag bg-amber/[0.08] border border-amber/30",
       animate && "anim-glow", className)}>
-      <Ico.coin className="w-3.5 h-3.5 text-brass2" />
-      <span className="display text-[16px] leading-none tnum text-brass2">{amount.toLocaleString()}</span>
+      <Ico.coin className="w-3.5 h-3.5 text-amber" />
+      <span className="display text-[16px] leading-none tnum text-amber"
+        style={{ textShadow: "0 0 12px rgba(255,176,32,.5)" }}>{amount.toLocaleString()}</span>
     </span>
   );
 }
@@ -185,17 +216,17 @@ export function LevelRing({ level, pct, size = 46 }: { level: number; pct: numbe
   return (
     <div className="relative grid place-items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,.1)" strokeWidth={3.4} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#lg)" strokeWidth={3.4}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(120,160,255,.14)" strokeWidth={3.4} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#lvlgrad)" strokeWidth={3.4}
           strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)}
-          style={{ transition: "stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)" }} />
+          style={{ transition: "stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)", filter: "drop-shadow(0 0 5px rgba(34,211,238,.85))" }} />
         <defs>
-          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f4d68a" /><stop offset="100%" stopColor="#c07f1d" />
+          <linearGradient id="lvlgrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#86fbff" /><stop offset="100%" stopColor="#8b5cf6" />
           </linearGradient>
         </defs>
       </svg>
-      <span className="absolute display text-[17px] leading-none text-brass2 tnum">{level}</span>
+      <span className="absolute display text-[17px] leading-none text-accent2 tnum">{level}</span>
     </div>
   );
 }
@@ -204,16 +235,16 @@ export function Modal({ children, onClose, className, wide }: {
   children: React.ReactNode; onClose?: () => void; className?: string; wide?: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center p-3 bg-black/72 backdrop-blur-[3px]"
+    <div className="fixed inset-0 z-50 grid place-items-center p-3 bg-black/78 backdrop-blur-[5px]"
       onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
-        className={cn("anim-pop relative w-full rounded-2xl border border-white/10 overflow-hidden",
-          "bg-[linear-gradient(165deg,#1b211c,#0d1210_70%)] shadow-[0_30px_80px_rgba(0,0,0,.8)]",
+        className={cn("anim-pop relative w-full clip-panel overflow-hidden glass",
+          "shadow-[0_34px_90px_rgba(0,0,0,.85),0_0_60px_rgba(34,211,238,.1)]",
           wide ? "max-w-2xl" : "max-w-sm", className)}>
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brass/60 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent to-transparent" />
         {onClose && (
           <button onClick={onClose} aria-label="Close"
-            className="absolute top-2.5 right-2.5 z-10 grid place-items-center w-8 h-8 rounded-lg text-muted hover:text-cream hover:bg-white/10 press">
+            className="absolute top-2.5 right-2.5 z-10 grid place-items-center w-8 h-8 clip-tag text-muted hover:text-cream hover:bg-white/10 press">
             <Ico.close className="w-4 h-4" />
           </button>
         )}
@@ -226,8 +257,45 @@ export function Modal({ children, onClose, className, wide }: {
 export function SectionTitle({ children, sub }: { children: React.ReactNode; sub?: string }) {
   return (
     <div className="mb-3">
-      <h2 className="display text-[26px] leading-none uppercase text-cream tracking-wide">{children}</h2>
-      {sub && <p className="text-[12px] text-muted mt-1">{sub}</p>}
+      <div className="flex items-center gap-2.5">
+        <span className="block w-1 h-6 bg-gradient-to-b from-accent2 to-violet"
+          style={{ boxShadow: "0 0 12px rgba(34,211,238,.7)" }} />
+        <h2 className="display text-[26px] leading-none uppercase text-cream tracking-[0.04em]">{children}</h2>
+      </div>
+      {sub && <p className="text-[12px] text-muted mt-1.5 pl-3.5">{sub}</p>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- esports extras */
+
+/** Small clipped-corner label, used for tags like "OWNED", "EQUIPPED", "PRO". */
+export function Tag({ children, tone = "accent", className }: {
+  children: React.ReactNode; tone?: "accent" | "magenta" | "lime" | "amber" | "muted"; className?: string;
+}) {
+  const tones = {
+    accent: "text-accent2 border-accent/45 bg-accent/10",
+    magenta: "text-magenta border-magenta/45 bg-magenta/10",
+    lime: "text-lime border-lime/45 bg-lime/10",
+    amber: "text-amber border-amber/45 bg-amber/10",
+    muted: "text-muted border-white/12 bg-white/[0.04]",
+  }[tone];
+  return (
+    <span className={cn("display inline-flex items-center gap-1 px-2 py-[3px] text-[10px] uppercase tracking-[0.18em] border clip-tag",
+      tones, className)}>
+      {children}
+    </span>
+  );
+}
+
+/** Panel wrapper giving every card the same frosted, edge-lit treatment. */
+export function Panel({ children, className, glow = false }: {
+  children: React.ReactNode; className?: string; glow?: boolean;
+}) {
+  return (
+    <div className={cn("relative clip-panel glass edge-glow overflow-hidden",
+      glow && "shadow-[0_22px_56px_rgba(0,0,0,.6),0_0_44px_rgba(34,211,238,.14)]", className)}>
+      {children}
     </div>
   );
 }

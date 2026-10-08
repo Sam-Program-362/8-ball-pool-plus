@@ -4,7 +4,7 @@ import { CUES, SKINS } from "@/game/constants";
 import { useProfile } from "@/game/hooks";
 import { store } from "@/game/store";
 import { sfx } from "@/game/audio";
-import { Btn, CoinPill, Ico, StatBar } from "./ui";
+import { Btn, CoinPill, Ico, Panel, StatBar, Tag } from "./ui";
 import { CueBar } from "./Menu";
 
 type Tab = "cues" | "tables";
@@ -35,11 +35,11 @@ export default function Shop({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="relative min-h-full w-full flex flex-col">
-      <header className="px-4 sm:px-7 pt-4 pb-3 flex items-center gap-3 border-b border-white/[0.06] bg-black/25 backdrop-blur-[2px] sticky top-0 z-20">
+      <header className="px-4 sm:px-7 pt-4 pb-3 flex items-center gap-3 border-b border-white/[0.07] bg-ink2/85 backdrop-blur-md sticky top-0 z-20">
         <Btn variant="ghost" size="sm" onClick={() => { sfx.ui(false); onBack(); }} icon={<Ico.back className="w-4 h-4" />}>Back</Btn>
-        <div>
-          <h1 className="display text-[27px] leading-none uppercase text-cream">Pro Shop</h1>
-          <p className="text-[11px] text-muted">Better cues hold more power, spin and aim-line length</p>
+        <div className="min-w-0">
+          <h1 className="display text-[27px] leading-none uppercase text-cream tracking-[0.03em]">Pro Shop</h1>
+          <p className="text-[11px] text-muted truncate">Better cues hold more power, spin and aim-line length</p>
         </div>
         <div className="flex-1" />
         <CoinPill amount={p.coins} animate={flash !== null && flash !== "poor"} />
@@ -48,8 +48,10 @@ export default function Shop({ onBack }: { onBack: () => void }) {
       <div className="px-4 sm:px-7 pt-3 flex gap-2">
         {(["cues", "tables"] as Tab[]).map((t) => (
           <button key={t} onClick={() => { sfx.ui(); setTab(t); }}
-            className={cn("display uppercase text-[17px] px-4 py-1.5 rounded-lg border press",
-              tab === t ? "border-brass/60 bg-brass/15 text-brass2" : "border-white/[0.07] bg-white/[0.03] text-muted")}>
+            className={cn("display uppercase text-[17px] px-4 py-1.5 clip-tag border press transition-all tracking-[0.08em]",
+              tab === t
+                ? "border-accent/60 bg-accent/15 text-accent2 shadow-[0_0_20px_rgba(34,211,238,.22)]"
+                : "border-white/[0.08] bg-white/[0.03] text-muted hover:text-cream hover:border-white/20")}>
             {t}
           </button>
         ))}
@@ -57,7 +59,7 @@ export default function Shop({ onBack }: { onBack: () => void }) {
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-7 py-4">
         {flash === "poor" && (
-          <div className="mb-3 px-3 py-2 rounded-lg bg-crimson/20 border border-crimson/40 text-[12.5px] text-[#ffd9d3] anim-slide">
+          <div className="mb-3 px-3 py-2 clip-tag bg-crimson/18 border border-crimson/45 text-[12.5px] text-[#ffd7de] anim-slide">
             Not enough coins — win a few racks first.
           </div>
         )}
@@ -68,41 +70,44 @@ export default function Shop({ onBack }: { onBack: () => void }) {
               const equipped = p.cue === c.id;
               const afford = p.coins >= c.price;
               return (
-                <div key={c.id}
-                  className={cn("relative rounded-xl border p-4 overflow-hidden transition-transform",
-                    equipped ? "border-brass/70 bg-brass/[0.07]" : "border-white/[0.08] bg-[linear-gradient(160deg,rgba(255,255,255,.045),rgba(0,0,0,.35))]",
+                <Panel key={c.id}
+                  glow={equipped}
+                  className={cn("p-4 transition-transform",
+                    equipped ? "border-accent/55" : "border-white/[0.09]",
                     flash === c.id && "anim-shake")}>
-                  <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-25 blur-xl"
+                  <div className="absolute -right-8 -top-8 w-28 h-28 rounded-full opacity-25 blur-2xl pointer-events-none"
                     style={{ background: c.ring }} />
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="display text-[23px] leading-none uppercase text-cream">{c.name}</div>
-                      <div className="text-[10.5px] uppercase tracking-[0.18em] text-muted mt-1">
-                        {c.price === 0 ? "Starter" : equipped ? "Equipped" : owned ? "Owned" : `${c.price.toLocaleString()} coins`}
+                  <div className="relative flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="display text-[23px] leading-none uppercase text-cream truncate">{c.name}</div>
+                      <div className="mt-1.5">
+                        {c.price === 0 ? <Tag tone="muted">Starter</Tag>
+                          : equipped ? <Tag tone="accent">In use</Tag>
+                          : owned ? <Tag tone="lime">Owned</Tag>
+                          : <Tag tone="amber">{c.price.toLocaleString()} coins</Tag>}
                       </div>
                     </div>
-                    {equipped && <span className="display text-[12px] uppercase px-2 py-0.5 rounded bg-brass text-[#221703]">In use</span>}
                   </div>
 
-                  <div className="mt-3 mb-3">
+                  <div className="relative mt-3 mb-3">
                     <CueBar cueId={c.id} height={16} />
                   </div>
 
-                  <div className="grid gap-1.5">
-                    <StatBar label="Power" value={c.power} color="#e0603c" icon={<Ico.bolt className="w-3 h-3" />} />
-                    <StatBar label="Spin" value={c.spin} color="#4fa3e0" icon={<Ico.spin className="w-3 h-3" />} />
-                    <StatBar label="Aim" value={c.aim} color="#d9a441" icon={<Ico.target className="w-3 h-3" />} />
-                    <StatBar label="Time" value={c.time} color="#5fbf7f" icon={<Ico.timer className="w-3 h-3" />} />
+                  <div className="relative grid gap-1.5">
+                    <StatBar label="Power" value={c.power} color="#ff6b3d" icon={<Ico.bolt className="w-3 h-3" />} />
+                    <StatBar label="Spin" value={c.spin} color="#22d3ee" icon={<Ico.spin className="w-3 h-3" />} />
+                    <StatBar label="Aim" value={c.aim} color="#8b5cf6" icon={<Ico.target className="w-3 h-3" />} />
+                    <StatBar label="Time" value={c.time} color="#a3ff12" icon={<Ico.timer className="w-3 h-3" />} />
                   </div>
 
                   <Btn className="w-full mt-3.5"
-                    variant={equipped ? "ghost" : owned ? "felt" : afford ? "gold" : "wood"}
+                    variant={equipped ? "ghost" : owned ? "success" : afford ? "primary" : "secondary"}
                     disabled={!owned && !afford}
                     onClick={() => buy("cue", c.id, c.price)}
                     icon={!owned ? <Ico.coin className="w-4 h-4" /> : undefined}>
                     {equipped ? "Equipped" : owned ? "Equip" : afford ? `Buy ${c.price.toLocaleString()}` : `${c.price.toLocaleString()}`}
                   </Btn>
-                </div>
+                </Panel>
               );
             })}
           </div>
@@ -112,12 +117,15 @@ export default function Shop({ onBack }: { onBack: () => void }) {
               const owned = p.ownedSkins.includes(s.id);
               const on = p.settings.skin === s.id;
               return (
-                <div key={s.id}
-                  className={cn("rounded-xl border p-3 overflow-hidden",
-                    on ? "border-brass/70 bg-brass/[0.07]" : "border-white/[0.08] bg-white/[0.03]",
+                <Panel key={s.id}
+                  glow={on}
+                  className={cn("p-3", on ? "border-accent/55" : "border-white/[0.09]",
                     flash === s.id && "anim-shake")}>
-                  <div className="relative rounded-lg overflow-hidden h-28 border border-black/50"
-                    style={{ background: `linear-gradient(150deg, ${s.wood[2]}, ${s.wood[1]} 60%, ${s.wood[0]})` }}>
+                  <div className="relative overflow-hidden h-28 border border-black/55"
+                    style={{
+                      background: `linear-gradient(150deg, ${s.wood[2]}, ${s.wood[1]} 60%, ${s.wood[0]})`,
+                      clipPath: "polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)",
+                    }}>
                     <div className="absolute inset-[9px] rounded-[5px]"
                       style={{ background: `radial-gradient(80% 130% at 50% 0%, ${s.feltLight}, ${s.felt} 45%, ${s.feltDeep})` }}>
                       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-black/80" />
@@ -130,22 +138,23 @@ export default function Shop({ onBack }: { onBack: () => void }) {
                           }} />
                       ))}
                     </div>
-                    <div className="absolute inset-0" style={{ boxShadow: "inset 0 0 30px rgba(0,0,0,.6)" }} />
+                    <div className="absolute inset-0" style={{ boxShadow: "inset 0 0 30px rgba(0,0,0,.62)" }} />
                   </div>
-                  <div className="flex items-center justify-between mt-3 px-1">
-                    <div>
-                      <div className="display text-[21px] leading-none uppercase text-cream">{s.name}</div>
-                      <div className="text-[10.5px] uppercase tracking-[0.16em] text-muted mt-1">
-                        {owned ? (on ? "In use" : "Owned") : `${s.price.toLocaleString()} coins`}
+                  <div className="flex items-center justify-between mt-3 px-1 gap-2">
+                    <div className="min-w-0">
+                      <div className="display text-[21px] leading-none uppercase text-cream truncate">{s.name}</div>
+                      <div className="mt-1.5">
+                        {owned ? (on ? <Tag tone="accent">In use</Tag> : <Tag tone="lime">Owned</Tag>)
+                          : <Tag tone="amber">{s.price.toLocaleString()} coins</Tag>}
                       </div>
                     </div>
-                    <Btn size="sm" variant={on ? "ghost" : owned ? "felt" : p.coins >= s.price ? "gold" : "wood"}
+                    <Btn size="sm" variant={on ? "ghost" : owned ? "success" : p.coins >= s.price ? "primary" : "secondary"}
                       disabled={!owned && p.coins < s.price}
                       onClick={() => buy("skin", s.id, s.price)}>
                       {on ? "Active" : owned ? "Use" : "Buy"}
                     </Btn>
                   </div>
-                </div>
+                </Panel>
               );
             })}
           </div>

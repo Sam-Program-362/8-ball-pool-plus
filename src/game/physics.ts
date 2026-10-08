@@ -121,6 +121,19 @@ export class World {
     return m;
   }
 
+  /** Is the ball close enough to a pocket that the low-speed stop should be
+   *  suppressed? Returns true only for balls that could still drop, so the
+   *  cutoff never freezes a ball on the lip of a pocket it was about to make. */
+  private inPocketGuard(b: Ball): boolean {
+    const g = this.P.pocketGuard;
+    if (g <= 0) return false;
+    for (const p of POCKETS) {
+      const dx = b.x - p.x, dy = b.y - p.y;
+      if (dx * dx + dy * dy < g * g) return true;
+    }
+    return false;
+  }
+
   /* ----------------------------------------------------------------*/
 
   strike(power01: number, spinX: number, spinY: number, angle: number, cue: Cue) {
@@ -195,19 +208,40 @@ export class World {
         b.wx += ((2.5 * P.slide * GRAV * uy) / R) * h;
         b.wy += ((-2.5 * P.slide * GRAV * ux) / R) * h;
       } else {
-        /* rolling resistance + quadratic cloth drag */
-        if (speed > 1e-4) {
-          const dec = P.roll * GRAV + P.drag * speed * speed;
-          const dv = Math.min(speed, dec * h);
-          b.vx -= (b.vx / speed) * dv;
-          b.vy -= (b.vy / speed) * dv;
-          speed -= dv;
-        }
         b.wx = b.vy / R;
         b.wy = -b.vx / R;
-        if (speed < P.stopSpeed) {
-          b.vx = 0; b.vy = 0; b.wx = 0; b.wy = 0;
-        }
+      }
+
+      /* Cloth resistance acts whether the ball is sliding or rolling.
+         This used to run only in the rolling branch, which left a hole:
+         a ball in near-pure rolling can keep a small residual contact slip
+         (cs) from collision resolution, and because the slide test is an
+         absolute 0.75 in/s threshold it would take the *sliding* branch —
+         where rolling resistance was never applied — and coast at a constant
+         speed with nothing to slow it. That is what made the last ball of a
+         shot roll on for many seconds before finally stopping. */
+      if (speed > 1e-4) {
+        const dec = P.roll * GRAV + P.drag * speed * speed;
+        const dv = Math.min(speed, dec * h);
+        b.vx -= (b.vx / speed) * dv;
+        b.vy -= (b.vy / speed) * dv;
+        speed -= dv;
+      }
+
+      /* --- decisive low-speed stop ----------------------------------
+         Without this a slowly rolling ball keeps creeping across the cloth
+         long after it has stopped being interesting, which drags out the end
+         of every shot. Below `stopSpeed` the ball is snapped to rest — unless
+         it is close enough to a pocket that it could still drop, in which case
+         it is left alone so a ball trickling into a jaw still pots.
+         Checked in both branches: the old code only tested here, so a ball
+         still sliding very slowly was exempt from the cutoff entirely. */
+      if (speed < P.stopSpeed && !this.inPocketGuard(b)) {
+        b.vx = 0;
+        b.vy = 0;
+        b.wx = 0;
+        b.wy = 0;
+        speed = 0;
       }
 
       /* swerve: side spin curves the trajectory (massé-lite) */

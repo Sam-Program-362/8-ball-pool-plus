@@ -120,15 +120,20 @@ export interface PhysParams {
   swerve: number; // lateral curve from side spin
   squirt: number; // cue-ball deflection from english
   capture: number; // extra capture radius bonus
+  /** Balls slower than `stopSpeed` (in/s) are snapped to rest, which kills the
+   *  endless low-speed creep at the end of a shot. The snap is suppressed while
+   *  the ball is this close to a pocket centre (inches), so a ball trickling
+   *  towards a jaw is still allowed to drop instead of freezing on the lip. */
+  pocketGuard: number;
 }
 
 export const PHYS: Record<PhysicsMode, PhysParams> = {
   high: {
     slide: 0.2,
-    roll: 0.05,
+    roll: 0.02,
     drag: 0.0025,
     spin: 0.11,
-    stopSpeed: 5.5,
+    stopSpeed: 13,
     ballE: 0.975,
     ballMu: 0.062,
     cushE: 0.84,
@@ -136,13 +141,14 @@ export const PHYS: Record<PhysicsMode, PhysParams> = {
     swerve: 0.055,
     squirt: 1,
     capture: 0,
+    pocketGuard: 4,
   },
   simple: {
     slide: 0.2,
-    roll: 0.058,
+    roll: 0.025,
     drag: 0.0029,
     spin: 0,
-    stopSpeed: 6.5,
+    stopSpeed: 13,
     ballE: 1.0,
     ballMu: 0,
     cushE: 0.92,
@@ -150,6 +156,7 @@ export const PHYS: Record<PhysicsMode, PhysParams> = {
     swerve: 0,
     squirt: 0,
     capture: 0.22,
+    pocketGuard: 4,
   },
 };
 

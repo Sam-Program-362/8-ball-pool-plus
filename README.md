@@ -16,6 +16,7 @@ The headline feature is a real rigid-body pool physics engine rather than the si
 - [Controls](#controls)
 - [Project structure](#project-structure)
 - [Tech stack](#tech-stack)
+- [Design system](#design-system)
 - [Notes](#notes)
 
 ---
@@ -58,10 +59,10 @@ The tunable constants live in `src/game/constants.ts`:
 | Parameter | High | Simple | Meaning |
 | --- | --- | --- | --- |
 | `slide` | 0.2 | 0.2 | Sliding (cloth) friction coefficient |
-| `roll` | 0.05 | 0.058 | Rolling resistance coefficient |
+| `roll` | 0.02 | 0.025 | Rolling resistance coefficient |
 | `drag` | 0.0025 | 0.0029 | Quadratic cloth drag |
 | `spin` | 0.11 | 0 | Spinning friction coefficient |
-| `stopSpeed` | 5.5 | 6.5 | Below this speed the ball is at rest (in/s) |
+| `stopSpeed` | 13 | 13 | Below this speed the ball is snapped to rest (in/s) |
 | `ballE` | 0.975 | 1.0 | Ball–ball restitution |
 | `ballMu` | 0.062 | 0 | Ball–ball friction (throw) |
 | `cushE` | 0.84 | 0.92 | Cushion restitution |
@@ -69,8 +70,31 @@ The tunable constants live in `src/game/constants.ts`:
 | `swerve` | 0.055 | 0 | Lateral curve from side spin |
 | `squirt` | 1 | 0 | Cue-ball deflection from english |
 | `capture` | 0 | 0.22 | Extra pocket capture radius |
+| `pocketGuard` | 4 | 4 | Radius (in) around a pocket where the rest cutoff is suppressed |
 
 The cue ball can be struck up to `MAX_SPIN_OFFSET` = **0.58** of a ball radius off centre.
+
+### Shot settling
+
+Cloth resistance is applied in `substep()` whether the ball is sliding or rolling.
+This matters: the slide test is an absolute `cs > 0.75` in/s threshold, so a ball in
+near-pure rolling that carries a little residual contact slip from a collision would
+take the *sliding* branch — where rolling resistance used not to run — and coast at a
+constant speed with nothing left to slow it down. Decelerating along the velocity
+direction in both branches guarantees motion always dies out.
+
+On top of that, any ball below `stopSpeed` is snapped to rest rather than being
+allowed to creep. The snap is skipped inside `pocketGuard` of a pocket centre, so a
+ball trickling into a jaw still drops instead of freezing on the lip.
+
+Measured over 20 full AI racks per row, settling time is now effectively independent
+of frame rate:
+
+| Step size | Avg settle | Median | p90 | Max | Shots > 5 s |
+| --- | --- | --- | --- | --- | --- |
+| 1/60 (60 fps) | 1.89 s | 1.93 s | 2.70 s | 3.83 s | 0 / 601 |
+| 1/120 | 1.85 s | 1.84 s | 2.67 s | 3.88 s | 0 / 582 |
+| 1/240 | 1.82 s | 1.86 s | 2.65 s | 3.56 s | 0 / 595 |
 
 The AI in `src/game/ai.ts` uses the **same** `simulateShot` routine the game uses, so it evaluates candidate shots against the exact physics you are playing against — it has no special knowledge.
 
@@ -226,6 +250,7 @@ Keyboard input is ignored while it is the AI's turn, while paused, or after the 
 | Language | TypeScript 5.9 (strict) |
 | UI | React 19 |
 | Styling | Tailwind CSS 4 via `@tailwindcss/vite` |
+| Design system | `src/index.css` tokens + `src/components/ui.tsx` primitives |
 | Rendering | 2D canvas, fully procedural |
 | Audio | Web Audio API, fully synthesised |
 | Packaging | `vite-plugin-singlefile` — one self-contained HTML file |
@@ -234,10 +259,42 @@ Direct runtime dependencies are minimal: `react`, `react-dom`, `clsx` and `tailw
 
 ---
 
+## Design system
+
+The UI is a modern esports look built from two layers.
+
+**`src/index.css`** holds the theme tokens and reusable surfaces:
+
+| Token | Value | Role |
+| --- | --- | --- |
+| `--color-accent` | `#22d3ee` | Electric cyan, primary accent |
+| `--color-accent2` | `#86fbff` | Cyan highlight, glowing text |
+| `--color-magenta` | `#ff2e88` | Secondary accent, CTA endpoint |
+| `--color-violet` | `#8b5cf6` | Tertiary accent, XP |
+| `--color-lime` | `#a3ff12` | Success / equipped |
+| `--color-amber` | `#ffb020` | Coins, warnings |
+| `--color-crimson` | `#ff3b5c` | Fouls, danger |
+| `--color-ink` / `panel` | `#04060d` / `#0b1020` | Stage and card base |
+
+`--color-brass` and `--color-brass2` remain as aliases of the cyan accents so older
+markup keeps working.
+
+Surface and effect utilities: `.glass` (frosted card), `.edge-glow` (lit top hairline),
+`.clip-panel` / `.clip-tag` (clipped corners instead of soft rounding), `.neon-cta`
+(cyan → magenta gradient CTA), `.neon-line` (outlined neon), `.neon-text`, `.sweep`
+(diagonal light pass). Motion respects `prefers-reduced-motion`.
+
+**`src/components/ui.tsx`** holds the primitives every screen composes from:
+`Btn` (`primary` / `secondary` / `success` / `ghost` / `danger`), `IconBtn`, `Panel`,
+`Tag`, `Toggle`, `StatBar`, `CoinPill`, `LevelRing`, `Modal`, `SectionTitle`, `BallDot`
+and the `Ico` icon set.
+
+---
+
 ## Notes
 
 - **No binary assets.** Everything visual is drawn procedurally and every sound is synthesised, which is what makes the single-file build small enough to be practical.
-- **Fonts** are pulled from Google Fonts at runtime (Teko for display, Barlow for body). Without network access the CSS fallback stacks are used instead.
+- **Fonts** are pulled from Google Fonts at runtime (Chakra Petch for display, Barlow for body). Without network access the CSS fallback stacks are used instead.
 - **`package.json` `name`** is still the scaffold default `react-vite-tailwind`. Rename it to `8-ball-pool-plus` if you want the package name to match the repository — it has no effect on the build.
 - `node_modules/`, `dist/`, `.env`, `.env.local`, `*.log`, `.DS_Store` and `Thumbs.db` are ignored by Git; see `.gitignore`.
 

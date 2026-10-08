@@ -37,26 +37,55 @@ export function noiseTile(size: number, alpha: number, seed: number, mono = true
   return c;
 }
 
-/** woven cloth tile: fine fibres + speckle */
+/** woven cloth tile: a plain over/under weave plus fibre speckle.
+ *  `size` must stay a multiple of 2*THREAD so the checker tiles seamlessly. */
 function clothTile(hex: string, size = 96) {
   const c = cnv(size, size);
   const g = c.getContext("2d")!;
   g.fillStyle = hex;
   g.fillRect(0, 0, size, size);
   const r = rng(7);
-  g.globalAlpha = 0.06;
-  for (let i = 0; i < size; i += 2) {
-    g.strokeStyle = i % 4 === 0 ? "#ffffff" : "#000000";
-    g.lineWidth = 1;
-    g.beginPath(); g.moveTo(0, i + 0.5); g.lineTo(size, i + 0.5); g.stroke();
-    g.beginPath(); g.moveTo(i + 0.5, 0); g.lineTo(i + 0.5, size); g.stroke();
+
+  /* Plain weave: each cell shows either the warp or the weft thread on top,
+     alternating in a checkerboard. Lit along the thread that is "up".
+     THREAD must divide `size` into an EVEN number of cells or the checker
+     will not tile seamlessly — makeTable requests 128px tiles, so pick a
+     thread width that satisfies both constraints. */
+  let THREAD = 4;
+  for (const t of [4, 3, 2]) {
+    if (size % t === 0 && (size / t) % 2 === 0) { THREAD = t; break; }
   }
-  g.globalAlpha = 1;
-  for (let i = 0; i < 900; i++) {
+  const n = size / THREAD;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const warpUp = (i + j) % 2 === 0;
+      const x = i * THREAD, y = j * THREAD;
+      // the raised thread catches light; the recessed one falls into shadow
+      g.fillStyle = warpUp ? "rgba(255,255,255,0.055)" : "rgba(0,0,0,0.06)";
+      g.fillRect(x, y, THREAD, THREAD);
+      // a hairline on the leading edge of each thread gives the weave definition
+      g.fillStyle = warpUp ? "rgba(255,255,255,0.075)" : "rgba(0,0,0,0.075)";
+      if (warpUp) g.fillRect(x, y, THREAD, 0.7);
+      else g.fillRect(x, y, 0.7, THREAD);
+    }
+  }
+
+  /* fine fibre speckle, elongated along the thread direction */
+  for (let i = 0; i < 1400; i++) {
     const x = r() * size, y = r() * size;
-    g.fillStyle = r() > 0.5 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)";
-    g.fillRect(x, y, 1.4, 1.1);
+    const light = r() > 0.5;
+    g.fillStyle = light ? "rgba(255,255,255,0.045)" : "rgba(0,0,0,0.055)";
+    if (r() > 0.5) g.fillRect(x, y, 1.8, 0.8);
+    else g.fillRect(x, y, 0.8, 1.8);
   }
+
+  /* very subtle nap so large flat areas are not perfectly uniform */
+  const nap = g.createLinearGradient(0, 0, size, size);
+  nap.addColorStop(0, "rgba(255,255,255,0.02)");
+  nap.addColorStop(0.5, "rgba(0,0,0,0.012)");
+  nap.addColorStop(1, "rgba(255,255,255,0.018)");
+  g.fillStyle = nap;
+  g.fillRect(0, 0, size, size);
   return c;
 }
 
@@ -166,7 +195,9 @@ export function makeBallSkins(): Record<number, BallSkin> {
   return out;
 }
 
-/** specular + rim falloff drawn above every ball */
+/** specular + rim falloff drawn above every ball.
+ *  Polished resin reads as a sphere from three cues: a tight specular dot, a
+ *  broad soft highlight around it, and a cool bounce light on the shadow side. */
 export function makeGloss(rs: number) {
   const size = rs * 2;
   const c = cnv(size, size);
@@ -174,30 +205,52 @@ export function makeGloss(rs: number) {
   g.save();
   g.beginPath(); g.arc(rs, rs, rs, 0, Math.PI * 2); g.clip();
 
-  const rim = g.createRadialGradient(rs, rs, rs * 0.55, rs, rs, rs);
+  /* terminator: darken toward the edge so the ball separates from the cloth */
+  const rim = g.createRadialGradient(rs * 0.94, rs * 0.92, rs * 0.5, rs, rs, rs);
   rim.addColorStop(0, "rgba(0,0,0,0)");
-  rim.addColorStop(0.78, "rgba(0,0,0,0.14)");
-  rim.addColorStop(1, "rgba(0,0,0,0.62)");
+  rim.addColorStop(0.72, "rgba(0,0,0,0.1)");
+  rim.addColorStop(0.9, "rgba(0,0,0,0.34)");
+  rim.addColorStop(1, "rgba(0,0,0,0.68)");
   g.fillStyle = rim;
   g.fillRect(0, 0, size, size);
 
-  const bounce = g.createRadialGradient(rs * 1.35, rs * 1.42, 0, rs * 1.35, rs * 1.42, rs * 0.7);
-  bounce.addColorStop(0, "rgba(190,225,255,0.26)");
-  bounce.addColorStop(1, "rgba(190,225,255,0)");
+  /* cool bounce light off the cloth, opposite the key light */
+  const bounce = g.createRadialGradient(rs * 1.36, rs * 1.44, 0, rs * 1.36, rs * 1.44, rs * 0.78);
+  bounce.addColorStop(0, "rgba(150,235,255,0.3)");
+  bounce.addColorStop(0.55, "rgba(150,235,255,0.1)");
+  bounce.addColorStop(1, "rgba(150,235,255,0)");
   g.fillStyle = bounce;
   g.fillRect(0, 0, size, size);
 
-  const spec = g.createRadialGradient(rs * 0.62, rs * 0.56, 0, rs * 0.62, rs * 0.56, rs * 0.62);
-  spec.addColorStop(0, "rgba(255,255,255,0.95)");
-  spec.addColorStop(0.32, "rgba(255,255,255,0.34)");
+  /* broad soft highlight — the wide sheen of a polished surface */
+  const soft = g.createRadialGradient(rs * 0.66, rs * 0.6, 0, rs * 0.66, rs * 0.6, rs * 0.95);
+  soft.addColorStop(0, "rgba(255,255,255,0.4)");
+  soft.addColorStop(0.45, "rgba(255,255,255,0.14)");
+  soft.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = soft;
+  g.fillRect(0, 0, size, size);
+
+  /* tight specular core */
+  const spec = g.createRadialGradient(rs * 0.62, rs * 0.56, 0, rs * 0.62, rs * 0.56, rs * 0.4);
+  spec.addColorStop(0, "rgba(255,255,255,0.98)");
+  spec.addColorStop(0.4, "rgba(255,255,255,0.42)");
   spec.addColorStop(1, "rgba(255,255,255,0)");
   g.fillStyle = spec;
   g.fillRect(0, 0, size, size);
 
-  g.fillStyle = "rgba(255,255,255,0.95)";
+  /* the hard pinpoint that sells the gloss */
+  g.fillStyle = "rgba(255,255,255,0.97)";
   g.beginPath();
-  g.ellipse(rs * 0.6, rs * 0.54, rs * 0.11, rs * 0.075, -0.5, 0, Math.PI * 2);
+  g.ellipse(rs * 0.6, rs * 0.53, rs * 0.1, rs * 0.068, -0.5, 0, Math.PI * 2);
   g.fill();
+
+  /* thin rim highlight along the lit edge */
+  g.strokeStyle = "rgba(255,255,255,0.22)";
+  g.lineWidth = rs * 0.045;
+  g.beginPath();
+  g.arc(rs, rs, rs * 0.975, Math.PI * 1.06, Math.PI * 1.72);
+  g.stroke();
+
   g.restore();
   return c;
 }
